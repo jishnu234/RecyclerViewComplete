@@ -1,7 +1,8 @@
-package com.example.recyclerviewcomplete;
+package com.example.recyclerviewcomplete.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -10,9 +11,15 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.recyclerviewcomplete.R;
+import com.example.recyclerviewcomplete.helper.RecyclerHelper;
+import com.example.recyclerviewcomplete.interfacerecycler.RecyclerViewInterface;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -21,7 +28,7 @@ import java.util.Collections;
 
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
-public class MainActivity extends AppCompatActivity  implements RecyclerViewInterface{
+public class MainActivity extends AppCompatActivity  implements RecyclerViewInterface {
 
     private RecyclerView recyclerView;
     RecyclerHelper helper;
@@ -46,22 +53,45 @@ public class MainActivity extends AppCompatActivity  implements RecyclerViewInte
         helper = new RecyclerHelper(this, dataList, this);
         recyclerView.setAdapter(helper);
 
-        refreshlayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        refreshlayout.setOnRefreshListener(() -> {
+
+            dataList.add("Thor: Ragnarok (2017)");
+            dataList.add("Ant-Man and the Wasp (2018)");
+            dataList.add(" Avengers: Infinity War (2018)");
+            dataList.add("Avengers: Endgame (2019)");
+            dataList.add("Spider-Man: Far From Home (2019)");
+
+            helper.notifyDataSetChanged();
+            refreshlayout.setRefreshing(false);
+
+        });
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.serach_menu, menu);
+        MenuItem item = menu.findItem(R.id.search_menu);
+
+        SearchView searchView = (SearchView) item.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void onRefresh() {
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
 
-                dataList.add("Thor: Ragnarok (2017)");
-                dataList.add("Ant-Man and the Wasp (2018)");
-                dataList.add(" Avengers: Infinity War (2018)");
-                dataList.add("Avengers: Endgame (2019)");
-                dataList.add("Spider-Man: Far From Home (2019)");
+            @Override
+            public boolean onQueryTextChange(String newText) {
 
-                helper.notifyDataSetChanged();
-                refreshlayout.setRefreshing(false);
+                helper.getFilter().filter(newText);
 
+                return false;
             }
         });
 
+        return super.onCreateOptionsMenu(menu);
     }
 
     private void addData() {
@@ -121,12 +151,9 @@ public class MainActivity extends AppCompatActivity  implements RecyclerViewInte
                         helper.notifyItemRemoved(position);
 
                     Snackbar.make(recyclerView, movieName + " deleted", BaseTransientBottomBar.LENGTH_LONG)
-                            .setAction("UNDO", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    dataList.add(position, movieName);
-                                    helper.notifyItemInserted(position);
-                                }
+                            .setAction("UNDO", view -> {
+                                dataList.add(position, movieName);
+                                helper.notifyItemInserted(position);
                             }).show();
 
                     break;
@@ -134,14 +161,11 @@ public class MainActivity extends AppCompatActivity  implements RecyclerViewInte
                         archivedList.add(dataList.get(position));
                         String archiveMovieName = dataList.get(position);
                         Snackbar.make(recyclerView, archiveMovieName + ", Archived", BaseTransientBottomBar.LENGTH_LONG)
-                            .setAction("UNDO", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    archivedList.remove(archivedList.lastIndexOf(archiveMovieName));
-                                    dataList.add(position, archiveMovieName);
-                                    helper.notifyItemInserted(position);
+                            .setAction("UNDO", view -> {
+                                archivedList.remove(archivedList.lastIndexOf(archiveMovieName));
+                                dataList.add(position, archiveMovieName);
+                                helper.notifyItemInserted(position);
 
-                                }
                             }).show();
 
                         dataList.remove(viewHolder.getAdapterPosition());

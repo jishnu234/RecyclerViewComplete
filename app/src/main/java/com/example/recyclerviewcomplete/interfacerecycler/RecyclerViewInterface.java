@@ -1,4 +1,4 @@
-package com.example.recyclerviewcomplete;
+package com.example.recyclerviewcomplete.interfacerecycler;
 
 public interface RecyclerViewInterface {
 
